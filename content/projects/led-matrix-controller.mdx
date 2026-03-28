@@ -1,0 +1,25 @@
+---
+title: "LED Matrix Controller"
+date: 2026-02-15
+summary: "Custom PCB and firmware for driving a 16x16 WS2812B LED matrix."
+tags: ["electronics", "PCB", "C++", "ESP32"]
+status: "completed"
+---
+
+A custom-designed PCB and firmware for controlling a 16x16 WS2812B addressable LED matrix, powered by an ESP32.
+
+## Overview
+
+Built a hardware controller from scratch:
+
+- **PCB designed in KiCad** — 2-layer board with ESP32-WROOM module, level shifter for the data line, and screw terminals for power
+- **Firmware in C++** — runs animation patterns, responds to serial commands, supports OTA updates
+- **Power management** — proper decoupling, bulk capacitance, and current limiting for 256 LEDs
+
+## Lessons Learned
+
+1. Always add test points to your PCB — debugging without them is painful
+2. WS2812B timing is tight — use hardware SPI or a dedicated library, not `delayMicroseconds()`
+3. 256 LEDs at full white draws ~15A — plan your power supply accordingly
+
+> This was my first custom PCB project. The first revision had a footprint error on the level shifter. The second revision worked perfectly.

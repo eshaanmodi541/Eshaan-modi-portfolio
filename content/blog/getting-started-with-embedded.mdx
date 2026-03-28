@@ -1,0 +1,51 @@
+---
+title: "Getting Started with Embedded Systems"
+date: 2026-03-25
+summary: "A practical introduction to embedded development for software engineers."
+tags: ["embedded", "C", "hardware"]
+---
+
+If you're a software engineer curious about hardware, embedded systems are the best entry point. You get to write code that directly controls physical things — LEDs, motors, sensors, communication buses.
+
+## What You Need
+
+At minimum:
+
+| Component | Example | Cost |
+|-----------|---------|------|
+| Microcontroller board | Arduino Uno, ESP32 | $10-15 |
+| USB cable | Type-B or Type-C | $5 |
+| Breadboard + jumper wires | Generic kit | $8 |
+| A few LEDs and resistors | 220Ω, 5mm LEDs | $3 |
+
+## Your First Program
+
+The "Hello World" of embedded is blinking an LED:
+
+```c title="blink.ino"
+#define LED_PIN 13
+
+void setup() {
+  pinMode(LED_PIN, OUTPUT);
+}
+
+void loop() {
+  digitalWrite(LED_PIN, HIGH);
+  delay(500);
+  digitalWrite(LED_PIN, LOW);
+  delay(500);
+}
+```
+
+Simple, but powerful — you're now controlling hardware with code.
+
+## What's Next
+
+Once blinking works, try:
+
+1. Reading a button input with `digitalRead()`
+2. Reading an analog sensor with `analogRead()`
+3. Communicating over Serial (`Serial.println()`)
+4. Driving a motor with PWM
+
+The rabbit hole goes deep. Enjoy it.
