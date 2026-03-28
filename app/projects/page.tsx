@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { getProjects } from "@/lib/mdx";
 import { ProjectCard } from "@/components/ui/ProjectCard";
 

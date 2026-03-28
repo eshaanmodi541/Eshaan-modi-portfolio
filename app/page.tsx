@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
 import { getBlogPosts, getProjects } from "@/lib/mdx";
 import { BlogPostItem } from "@/components/ui/BlogPostItem";

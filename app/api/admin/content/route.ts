@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import fs from "fs";
 import path from "path";
 import matter from "gray-matter";
@@ -93,6 +94,11 @@ export async function POST(request: NextRequest) {
 
   fs.writeFileSync(filePath, fileContent, "utf-8");
 
+  // Revalidate affected pages so changes appear immediately
+  revalidatePath("/");
+  revalidatePath(`/${type}`);
+  revalidatePath(`/${type}/${slug}`);
+
   return NextResponse.json({ success: true, slug, filename });
 }
 
@@ -111,6 +117,11 @@ export async function DELETE(request: NextRequest) {
   if (fs.existsSync(mdxPath)) fs.unlinkSync(mdxPath);
   else if (fs.existsSync(mdPath)) fs.unlinkSync(mdPath);
   else return NextResponse.json({ error: "Not found" }, { status: 404 });
+
+  // Revalidate affected pages
+  revalidatePath("/");
+  revalidatePath(`/${type}`);
+  revalidatePath(`/${type}/${slug}`);
 
   return NextResponse.json({ success: true });
 }

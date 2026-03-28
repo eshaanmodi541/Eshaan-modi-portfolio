@@ -1,3 +1,6 @@
+export const dynamic = "force-dynamic";
+export const dynamicParams = true;
+
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getProject, getProjects } from "@/lib/mdx";
