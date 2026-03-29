@@ -25,6 +25,7 @@ function EditorContent() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [importing, setImporting] = useState(false);
 
   // Load existing content if editing
   useEffect(() => {
@@ -161,6 +162,51 @@ function EditorContent() {
     }
   }, [type]);
 
+  const importDocx = useCallback(async (file: File) => {
+    setImporting(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", type);
+
+      const res = await fetch("/api/admin/import-docx", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || "Import failed");
+        return;
+      }
+
+      const data = await res.json();
+
+      // Set the markdown content (append if there's existing content)
+      if (content.trim()) {
+        const overwrite = confirm(
+          "This will replace your current content. Continue?"
+        );
+        if (!overwrite) return;
+      }
+      setContent(data.markdown);
+
+      if (data.warnings?.length > 0) {
+        console.warn("Docx import warnings:", data.warnings);
+      }
+
+      if (data.images?.length > 0) {
+        alert(
+          `Imported successfully! ${data.images.length} image${data.images.length > 1 ? "s" : ""} extracted and saved.`
+        );
+      }
+    } catch {
+      alert("Import failed");
+    } finally {
+      setImporting(false);
+    }
+  }, [type, content]);
+
   // Keyboard shortcut: Cmd/Ctrl+S to save
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
@@ -239,6 +285,20 @@ function EditorContent() {
                     onChange={async (e) => {
                       const file = e.target.files?.[0];
                       if (file) await uploadImage(file, true);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <label className="font-mono text-xs px-3 py-1.5 rounded border border-border-primary text-fg-secondary hover:text-fg-primary hover:border-accent cursor-pointer transition-colors">
+                  {importing ? "importing..." : "import .docx"}
+                  <input
+                    type="file"
+                    accept=".docx"
+                    className="hidden"
+                    disabled={importing}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) await importDocx(file);
                       e.target.value = "";
                     }}
                   />
