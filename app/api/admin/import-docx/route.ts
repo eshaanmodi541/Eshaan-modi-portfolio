@@ -82,13 +82,11 @@ function htmlToMarkdown(html: string): string {
   md = md.replace(/&#39;/g, "'");
   md = md.replace(/&nbsp;/g, " ");
 
-  // Decode &lt; / &gt; but re-escape bare angle brackets that aren't markdown images/links
-  // MDX treats `<` as JSX, so bare `<5` or `<anything` will break compilation
-  md = md.replace(/&lt;/g, "<");
+  // Decode &gt; but keep &lt; that would break MDX (it treats `<` as JSX)
+  // Only decode &lt; when it's part of valid HTML-like syntax (letter after <)
   md = md.replace(/&gt;/g, ">");
-  // Escape `<` that aren't part of markdown image/link syntax (already converted above)
-  // A bare `<` followed by a non-letter or non-! is not valid HTML/JSX and will break MDX
-  md = md.replace(/<(?![a-zA-Z!/])/g, "\\<");
+  md = md.replace(/&lt;(?=[a-zA-Z!/])/g, "<");
+  // Leave remaining &lt; as-is (e.g. &lt;5 micrometers) — MDX-safe
 
   // Clean up excessive whitespace
   md = md.replace(/\n{3,}/g, "\n\n");
