@@ -175,14 +175,20 @@ function EditorContent() {
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        alert(err.error || "Import failed");
+        // The response might be a redirect to login (HTML) or a JSON error
+        const contentType = res.headers.get("content-type") || "";
+        if (contentType.includes("application/json")) {
+          const err = await res.json();
+          alert(err.error || "Import failed");
+        } else {
+          alert(`Import failed (status ${res.status}). You may need to log in again.`);
+        }
         return;
       }
 
       const data = await res.json();
 
-      // Set the markdown content (append if there's existing content)
+      // Set the markdown content (ask if there's existing content)
       if (content.trim()) {
         const overwrite = confirm(
           "This will replace your current content. Continue?"
@@ -195,13 +201,14 @@ function EditorContent() {
         console.warn("Docx import warnings:", data.warnings);
       }
 
-      if (data.images?.length > 0) {
-        alert(
-          `Imported successfully! ${data.images.length} image${data.images.length > 1 ? "s" : ""} extracted and saved.`
-        );
-      }
-    } catch {
-      alert("Import failed");
+      const imgCount = data.images?.length || 0;
+      alert(
+        imgCount > 0
+          ? `Imported! ${imgCount} image${imgCount > 1 ? "s" : ""} extracted and saved.`
+          : "Imported successfully!"
+      );
+    } catch (err) {
+      alert(`Import failed: ${err instanceof Error ? err.message : "unknown error"}`);
     } finally {
       setImporting(false);
     }

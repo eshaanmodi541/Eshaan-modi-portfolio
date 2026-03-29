@@ -40,15 +40,6 @@ function htmlToMarkdown(html: string): string {
   });
 
   // Ordered lists
-  let counter = 0;
-  md = md.replace(/<ol>([\s\S]*?)<\/ol>/g, (_, inner) => {
-    counter = 0;
-    return inner.replace(/<li>([\s\S]*?)<\/li>/g, () => {
-      counter++;
-      return `${counter}. ${arguments[1]}\n`;
-    }) + "\n";
-  });
-  // Fix ordered list items more carefully
   md = md.replace(/<ol>([\s\S]*?)<\/ol>/g, (_, inner: string) => {
     let i = 0;
     return inner.replace(/<li>([\s\S]*?)<\/li>/g, (__, content: string) => {
