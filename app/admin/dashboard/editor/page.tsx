@@ -21,8 +21,10 @@ function EditorContent() {
   const [draft, setDraft] = useState(false);
   const [content, setContent] = useState("");
   const [preview, setPreview] = useState(false);
+  const [coverImage, setCoverImage] = useState("");
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   // Load existing content if editing
   useEffect(() => {
@@ -42,6 +44,7 @@ function EditorContent() {
           setStatus(fm.status || "");
           setGithub(fm.github || "");
           setDemo(fm.demo || "");
+          setCoverImage(fm.coverImage || "");
           setDraft(fm.draft || false);
           setContent(data.content);
         });
@@ -61,6 +64,7 @@ function EditorContent() {
         setStatus(data.status || "");
         setGithub(data.github || "");
         setDemo(data.demo || "");
+        setCoverImage(data.coverImage || "");
         setDraft(data.draft || false);
         setContent(body);
       } catch {
@@ -93,6 +97,7 @@ function EditorContent() {
     };
 
     if (draft) frontmatter.draft = true;
+    if (coverImage) frontmatter.coverImage = coverImage;
     if (status) frontmatter.status = status;
     if (github) frontmatter.github = github;
     if (demo) frontmatter.demo = demo;
@@ -123,7 +128,38 @@ function EditorContent() {
     } finally {
       setSaving(false);
     }
-  }, [title, date, summary, tags, status, github, demo, draft, content, type, editSlug, router]);
+  }, [title, date, summary, tags, status, github, demo, coverImage, draft, content, type, editSlug, router]);
+
+  const uploadImage = useCallback(async (file: File, insertInContent: boolean) => {
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("folder", type);
+
+      const res = await fetch("/api/admin/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        alert(err.error || "Upload failed");
+        return null;
+      }
+
+      const data = await res.json();
+      if (insertInContent) {
+        setContent((prev) => prev + `\n\n![${file.name}](${data.path})\n`);
+      }
+      return data.path as string;
+    } catch {
+      alert("Upload failed");
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  }, [type]);
 
   // Keyboard shortcut: Cmd/Ctrl+S to save
   useEffect(() => {
@@ -190,6 +226,26 @@ function EditorContent() {
               className="w-full bg-transparent border-none text-3xl font-bold tracking-tight text-fg-primary placeholder:text-fg-tertiary focus:outline-none"
             />
 
+            {/* Toolbar */}
+            {!preview && (
+              <div className="flex items-center gap-2">
+                <label className="font-mono text-xs px-3 py-1.5 rounded border border-border-primary text-fg-secondary hover:text-fg-primary hover:border-accent cursor-pointer transition-colors">
+                  {uploading ? "uploading..." : "insert image"}
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    disabled={uploading}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (file) await uploadImage(file, true);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              </div>
+            )}
+
             {/* Content area */}
             {preview ? (
               <div className="bg-bg-secondary border border-border-primary rounded-lg p-8 min-h-[60vh]">
@@ -237,6 +293,48 @@ function EditorContent() {
                   className="w-full bg-bg-primary border border-border-primary rounded px-3 py-1.5 font-mono text-xs text-fg-primary placeholder:text-fg-tertiary focus:outline-none focus:border-accent resize-none transition-colors"
                   placeholder="Brief description..."
                 />
+              </Field>
+
+              <Field label="Cover Image">
+                {coverImage ? (
+                  <div className="space-y-2">
+                    <div className="relative">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={coverImage}
+                        alt="Cover"
+                        className="w-full rounded border border-border-primary"
+                      />
+                      <button
+                        onClick={() => setCoverImage("")}
+                        className="absolute top-1 right-1 bg-bg-primary/80 text-fg-tertiary hover:text-error rounded px-1.5 py-0.5 font-mono text-[10px] transition-colors"
+                      >
+                        remove
+                      </button>
+                    </div>
+                    <p className="font-mono text-[10px] text-fg-tertiary truncate">
+                      {coverImage}
+                    </p>
+                  </div>
+                ) : (
+                  <label className="block w-full text-center font-mono text-xs px-3 py-3 rounded border border-dashed border-border-primary text-fg-tertiary hover:text-fg-secondary hover:border-accent cursor-pointer transition-colors">
+                    {uploading ? "uploading..." : "upload cover image"}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploading}
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          const path = await uploadImage(file, false);
+                          if (path) setCoverImage(path);
+                        }
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
               </Field>
 
               <Field label="Tags (comma separated)">
@@ -331,6 +429,9 @@ function EditorContent() {
                 <div>
                   <code>[text](url)</code> &rarr; link
                 </div>
+                <div>
+                  <code>![alt](url)</code> &rarr; image
+                </div>
               </div>
             </div>
 
@@ -379,6 +480,8 @@ function MarkdownPreview({ content }: { content: string }) {
     .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
     // Italic
     .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    // Images (must come before links)
+    .replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" style="max-width:100%;border-radius:8px;margin:1rem 0" />')
     // Links
     .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>')
     // Blockquotes

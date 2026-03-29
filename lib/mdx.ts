@@ -14,6 +14,7 @@ export interface PostMeta {
   status?: string;
   github?: string;
   demo?: string;
+  coverImage?: string;
   readingTime: string;
 }
 
@@ -44,6 +45,7 @@ function getPostsFromDir(dir: string): PostMeta[] {
         status: data.status,
         github: data.github,
         demo: data.demo,
+        coverImage: data.coverImage,
         readingTime: stats.text,
       };
     })
@@ -72,6 +74,7 @@ function getPost(dir: string, slug: string): Post | null {
       status: data.status,
       github: data.github,
       demo: data.demo,
+      coverImage: data.coverImage,
       readingTime: stats.text,
     },
     content,

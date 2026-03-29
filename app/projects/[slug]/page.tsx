@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { notFound } from "next/navigation";
+import Image from "next/image";
 import Link from "next/link";
 import { getProject, getProjects } from "@/lib/mdx";
 import { MDXContent } from "@/lib/mdx-components";
@@ -87,6 +88,17 @@ export default async function ProjectPage({
             </a>
           )}
         </div>
+
+        {project.meta.coverImage && (
+          <Image
+            src={project.meta.coverImage}
+            alt={project.meta.title}
+            width={800}
+            height={450}
+            className="rounded-lg mb-8 w-full h-auto"
+            priority
+          />
+        )}
 
         <MDXContent source={project.content} />
 
