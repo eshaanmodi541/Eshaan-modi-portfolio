@@ -1,9 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { jwtVerify } from "jose";
 import fs from "fs";
 import path from "path";
 import mammoth from "mammoth";
 
 const imageDir = path.join(process.cwd(), "public", "images");
+const secret = new TextEncoder().encode(
+  process.env.JWT_SECRET || "fallback-dev-secret"
+);
 
 // Convert HTML to clean markdown
 function htmlToMarkdown(html: string): string {
@@ -74,11 +78,17 @@ function htmlToMarkdown(html: string): string {
 
   // Decode HTML entities
   md = md.replace(/&amp;/g, "&");
-  md = md.replace(/&lt;/g, "<");
-  md = md.replace(/&gt;/g, ">");
   md = md.replace(/&quot;/g, '"');
   md = md.replace(/&#39;/g, "'");
   md = md.replace(/&nbsp;/g, " ");
+
+  // Decode &lt; / &gt; but re-escape bare angle brackets that aren't markdown images/links
+  // MDX treats `<` as JSX, so bare `<5` or `<anything` will break compilation
+  md = md.replace(/&lt;/g, "<");
+  md = md.replace(/&gt;/g, ">");
+  // Escape `<` that aren't part of markdown image/link syntax (already converted above)
+  // A bare `<` followed by a non-letter or non-! is not valid HTML/JSX and will break MDX
+  md = md.replace(/<(?![a-zA-Z!/])/g, "\\<");
 
   // Clean up excessive whitespace
   md = md.replace(/\n{3,}/g, "\n\n");
@@ -88,6 +98,17 @@ function htmlToMarkdown(html: string): string {
 }
 
 export async function POST(request: NextRequest) {
+  // Auth check (this route is excluded from middleware to avoid body size limits)
+  const token = request.cookies.get("admin-session")?.value;
+  if (!token) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+  try {
+    await jwtVerify(token, secret);
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const formData = await request.formData();
   const file = formData.get("file") as File | null;
   const folder = (formData.get("folder") as string) || "blog";

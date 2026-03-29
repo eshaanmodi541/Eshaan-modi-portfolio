@@ -32,5 +32,11 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/admin/:path*", "/api/admin/:path*"],
+  matcher: [
+    "/admin/:path*",
+    // Match all admin API routes except import-docx (large file uploads hit body size limits in middleware)
+    "/api/admin/auth/:path*",
+    "/api/admin/content/:path*",
+    "/api/admin/upload/:path*",
+  ],
 };
