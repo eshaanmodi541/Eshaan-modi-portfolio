@@ -2,7 +2,6 @@ export const dynamic = "force-dynamic";
 export const dynamicParams = true;
 
 import { notFound } from "next/navigation";
-import Image from "next/image";
 import Link from "next/link";
 import { getBlogPost, getBlogPosts } from "@/lib/mdx";
 import { MDXContent } from "@/lib/mdx-components";
@@ -62,13 +61,11 @@ export default async function BlogPostPage({
         </div>
 
         {post.meta.coverImage && (
-          <Image
+          /* eslint-disable-next-line @next/next/no-img-element */
+          <img
             src={post.meta.coverImage}
             alt={post.meta.title}
-            width={800}
-            height={450}
             className="rounded-lg mb-8 w-full h-auto"
-            priority
           />
         )}
 

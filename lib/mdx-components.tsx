@@ -1,18 +1,11 @@
-import Image from "next/image";
 import { MDXRemote } from "next-mdx-remote/rsc";
 import remarkGfm from "remark-gfm";
 import rehypePrettyCode from "rehype-pretty-code";
 
 const components = {
-  img: ({ src, alt }: React.ImgHTMLAttributes<HTMLImageElement>) => (
-    <Image
-      src={typeof src === "string" ? src : ""}
-      alt={alt || ""}
-      width={800}
-      height={450}
-      className="rounded-lg my-6 max-w-full h-auto"
-      sizes="(max-width: 768px) 100vw, 800px"
-    />
+  // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+  img: (props: React.ImgHTMLAttributes<HTMLImageElement>) => (
+    <img {...props} loading="lazy" />
   ),
 };
 
