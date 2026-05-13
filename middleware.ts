@@ -13,6 +13,10 @@ export async function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
+  if (pathname === "/api/admin/auth") {
+    return NextResponse.next();
+  }
+
   if (pathname.startsWith("/admin") || pathname.startsWith("/api/admin/")) {
     const token = request.cookies.get("admin-session")?.value;
 
